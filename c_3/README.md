@@ -1,7 +1,13 @@
-JSON Key Fetch
+## JSON Key Fetch
 
+This utility allows to fetch value for single or nested keys from JSON object.
 
-Usage: main.py [-h] -j JSON_STRING -k KEY
+### Usage:
+- Clone or Download Scripts. 
+- Execute main.py -h to see usage
+
+```
+main.py [-h] -j JSON_STRING -k KEY
 
 JSON key fetch function
 
@@ -13,10 +19,12 @@ Arguments Required:
                         Json String
   -k KEY, --key KEY     Key to fetch
 
+```
 
-Usage Examples:
+### Examples:
 
-EXAMPLE 1:<br />
+- EXAMPLE 1: valid JSON and valid KEY<br />
+```
 $ python main.py -j '{"a":{"b":{"c":"d"}}}' -k a/b/c
 <br />
 JSON :
@@ -32,24 +40,10 @@ KEY :  a/b/c
 <br />
 Output :  d
 <br /><br /><br />
+```
 
-EXAMPLE 2:<br />
-$ python main.py -j '{"x":{"y":{"z":"a"}}}' -k x/y/z 
-JSON :
-{
-    "x": {
-        "y": {
-            "z": "a"
-        }
-    }
-}
-<br />
-KEY :  x/y/z
-<br />
-Output :  a
-<br /><br /><br />
-
-EXAMPLE 3:<br />
+- EXAMPLE 2: valid JSON and invalid KEY <br />
+```
 $ python main.py -j '{"x":{"y":{"z":"a"}}}' -k p    
 JSON :
 {
@@ -64,8 +58,10 @@ KEY :  p
 <br />
 Output :  KEY_NOT_FOUND
 <br /><br /><br />
+```
 
-EXAMPLE 4:<br />
+- EXAMPLE 3: invalid JSON<br />
+```
 $ python main.py -j '{"x":{"y":"z":"a"}}}' -k p
 <br />
 Output :  INVALID_JSON_STRING
@@ -82,4 +78,4 @@ JSON :
 KEY :  z
 <br />
 Output :  a
-
+```
