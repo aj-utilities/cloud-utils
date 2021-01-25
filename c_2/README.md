@@ -6,7 +6,9 @@ It allows to query key from JSON interactively. <br/>
 
 <br/>
 
-Example : <br/>
+Usage Example : <br/>
+
+./main.sh <br/>
 
 ######################################################
 AWS : Instance Meta Data JSON
