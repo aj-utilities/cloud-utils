@@ -2,9 +2,14 @@
 
 This utility allows to fetch value for single or nested keys from JSON object.
 
+
+### Dependencies
+- python should be installed.
+- jq should be installed.
+
 ### Usage:
 - Clone or Download Scripts. 
-- Execute main.py -h to see usage
+- Execute python main.py -h to see usage
 
 ```
 main.py [-h] -j JSON_STRING -k KEY
@@ -58,3 +63,4 @@ Output :  KEY_NOT_FOUND
 $ python main.py -j '{"x":{"y":"z":"a"}}}' -k p
 Output :  INVALID_JSON_STRING
 ```
+
