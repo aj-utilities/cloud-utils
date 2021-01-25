@@ -1,19 +1,23 @@
-AWS instance metadata - JSON util
-<br/><br/><br/>
+# AWS instance metadata - JSON util
 
-This utility, queries ec2 instance metadata and generates JSON. <br/>
-It allows to query key from JSON interactively. <br/>
+- This utility, queries ec2 instance metadata and generates JSON.
+- It allows to query key from JSON interactively. <br/>
 
 <br/>
 
-Usage Example : <br/>
+### Usage Example : <br/>
+- Clone / Download Scripts on AWS EC2 instance
+- Execute main.sh
+- This will process ec2 instance metadata and displat in JSON format
+- Script allows to query individual key to be fetched from json
+- Example below
 
-./main.sh <br/>
-
+```
+./main.sh
 ######################################################
 AWS : Instance Meta Data JSON
 ######################################################
-```json
+
 {
   "ami-id": "ami-01720b5f421cf0179",
   "ami-launch-index": "0",
@@ -90,7 +94,7 @@ AWS : Instance Meta Data JSON
     "partition": "aws"
   }
 }
-```
+
 ######################################################
 You can query information for specific key
 Please input key to fetch value for
@@ -106,11 +110,18 @@ Please input key to fetch value for
 services
 ########################
 Fetched Value :
-```json
 {
   "domain": "amazonaws.com",
   "partition": "aws"
 }
-```
+
 Please input key to fetch value for
 ######################################################
+```
+- Press CTL+C to exit the interactive script
+
+
+
+### Known Issues
+- Metrics information is not processed in JSON currently, metrics metadata endpoint returns XML Data - this can be improved
+- Value for Public Key is not escaped correctly - this can be achieved by handling in json_escape function
