@@ -1,0 +1,193 @@
+# Main Template to create Nested stacks web, app, db
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS Networking Template, to setup VPC, Subnets
+##########################################################################
+# Params for Network Stack
+##########################################################################
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR Block for the VPC
+    Type: String
+  # Public Subnets for Web Tier
+  WebSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR Block for the public DMZ subnet 1 located in Availability Zone 1
+    Type: String
+  WebSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR Block for the public DMZ subnet 2 located in Availability Zone 2
+    Type: String
+  # Private Subnets for App Tier
+  AppSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR block for private subnet 1 located in Availability Zone 1
+    Type: String
+  AppSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR block for private subnet 2 located in Availability Zone 2
+    Type: String
+  # Private Subnets for Database
+  DbSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR block for private subnet 1 located in Availability Zone 1
+    Type: String
+  DbSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR block for private subnet 2 located in Availability Zone 2
+    Type: String
+
+##########################################################################
+# Params for Web tier Stack
+##########################################################################
+  WebTemplateVersion:
+    Type: String
+  WebSubnets:
+    Type: CommaDelimitedList
+  WebAsgMinSize:
+    Description: Minimum size for Autoscaling group
+    Type: String
+  WebAsgMaxSize:
+    Description: Maximum size for Autoscaling group
+    Type: String
+  WebAsgDesiredCapacity:
+    Description: Desired capacity for Autoscaling group
+    Type: String
+  WebStackName:
+    Description: Stack Name used as resource identifier
+    Type: String
+
+##########################################################################
+# Params for App tier Stack
+##########################################################################
+  AppTemplateVersion:
+    Type: String
+  AppSubnets:
+    Type: CommaDelimitedList
+  AppAsgMinSize:
+    Description: Minimum size for Autoscaling group
+    Type: String
+  AppAsgMaxSize:
+    Description: Maximum size for Autoscaling group
+    Type: String
+  AppAsgDesiredCapacity:
+    Description: Desired capacity for Autoscaling group
+    Type: String
+  AppStackName:
+    Description: Stack Name used as resource identifier
+    Type: String
+
+##########################################################################
+# Params for DB tier Stack
+##########################################################################
+  DBInstanceID:
+    Description: database instance
+    Type: String
+  DBName:
+    Description: database name
+    Type: String
+  DBInstanceClass:
+    Description: DB instance class
+    Type: String
+  DBAllocatedStorage:
+    Description: The size of the database (GiB)
+    Type: Number
+  DBUsername:
+    NoEcho: 'true'
+    Description: Username for database access
+    Type: String
+  DBPassword:
+    NoEcho: 'true'
+    Description: Password MySQL database access
+    Type: String
+  DBEngine:
+    Description: DB engine to use
+    Type: String
+  DBVersion:
+    Description: Version of Database engine
+    Type:String
+
+Resources:
+##########################################################################
+# Creates Network resources using network template
+##########################################################################
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3-bucket-url/network.yaml
+      Parameters:
+        WebSubnet1CIDR: !Ref WebSubnet1CIDR
+        WebSubnet2CIDR: !Ref WebSubnet2CIDR
+        AppSubnet1CIDR: !Ref AppSubnet1CIDR
+        AppSubnet2CIDR: !Ref AppSubnet2CIDR
+        DbSubnet1CIDR: !Ref DbSubnet1CIDR
+        DbSubnet2CIDR: !Ref DbSubnet2CIDR
+        VPCCIDR: !Ref VPCCIDR
+
+##########################################################################
+# Creates Web Tier using generic template ELB with ASG (elb-with-asg.yaml)
+##########################################################################
+  WebTier:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3-bucket-url/elb-with-asg.yaml
+      Parameters:
+        VPCID: !GetAtt NetworkStack.Outputs.VPCID
+        WebSubnet1Id: !GetAtt NetworkStack.Outputs.WebPublic1
+        WebSubnet2Id: !GetAtt NetworkStack.Outputs.WebPublic2
+        AppSubnet1Id: !GetAtt NetworkStack.Outputs.AppPrivate1
+        AppSubnet2Id: !GetAtt NetworkStack.Outputs.AppPrivate2
+        DbSubnet1Id: !GetAtt NetworkStack.Outputs.DbPrivate1
+        DbSubnet2Id: !GetAtt NetworkStack.Outputs.DbPrivate2
+        myLaunchTemplateVersionNumber: !Ref WebTemplateVersion
+        AsgMinSize: !Ref WebAsgMinSize
+        AsgMaxSize: !Ref WebAsgMaxSize
+        AsgDesiredCapacity: !Ref WebAsgDesiredCapacity
+        StackName: !Ref WebStackName
+
+##########################################################################
+# Creates App Tier using generic template ELB with ASG (elb-with-asg.yaml)
+##########################################################################
+  ApplicationTier:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3-bucket-url/elb-with-asg.yaml
+      Parameters:
+        VPCID: !GetAtt VPCStack.Outputs.VPCID
+        WebSubnet1Id: !GetAtt VPCStack.Outputs.WebPublic1
+        WebSubnet2Id: !GetAtt VPCStack.Outputs.WebPublic2
+        AppSubnet1Id: !GetAtt VPCStack.Outputs.AppPrivate1
+        AppSubnet2Id: !GetAtt VPCStack.Outputs.AppPrivate2
+        DbSubnet1Id: !GetAtt VPCStack.Outputs.DbPrivate1
+        DbSubnet2Id: !GetAtt VPCStack.Outputs.DbPrivate2
+        myLaunchTemplateVersionNumber: !Ref AppTemplateVersion
+        AsgMinSize: !Ref AppAsgMinSize
+        AsgMaxSize: !Ref AppAsgMaxSize
+        AsgDesiredCapacity: !Ref AppAsgDesiredCapacity
+        StackName: !Ref AppStackName
+
+##########################################################################
+# Creates DB using generic template database.yaml
+##########################################################################
+  DatabaseStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3-bucket-url/database.yaml
+      Parameters:
+        DBInstanceID: !Ref DBInstanceID
+        DBName: !Ref DBName
+        DBInstanceClass: !Ref DBInstanceClass
+        DBAllocatedStorage: !Ref DBAllocatedStorage
+        DBUsername: !Ref DBUsername
+        DBPassword: !Ref DBPassword
+        DBVersion: !Ref DBVersion
+
+
+

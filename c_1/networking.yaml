@@ -1,0 +1,277 @@
+# This template represents structure of VPC compnents to be created
+# Template is not tested for resource creation
+# Template can be made dynamic to create no. of subnets etc
+# Creates VPC, 2 public subnets , 2 private subnets,
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS Networking Template, to setup VPC, Subnets
+
+Parameters:
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR Block for the VPC
+    Type: String
+
+  # Public Subnets for Web Tier
+  WebSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR Block for the public DMZ subnet 1 located in Availability Zone 1
+    Type: String
+  WebSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR Block for the public DMZ subnet 2 located in Availability Zone 2
+    Type: String
+
+  # Private Subnets for App Tier
+  AppSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR block for private subnet 1 located in Availability Zone 1
+    Type: String
+  AppSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR block for private subnet 2 located in Availability Zone 2
+    Type: String
+
+  # Private Subnets for Database
+  DbSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR block for private subnet 1 located in Availability Zone 1
+    Type: String
+  DbSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Description: CIDR block for private subnet 2 located in Availability Zone 2
+    Type: String
+
+
+Resources:
+  # Single VPC, divided into 6 subnets(2 public - web, 2 private - app, 2 private -db)
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: True
+      InstanceTenancy: "default"
+      Tags:
+        - Key: Name
+          Value: "Challenge 1"
+
+  # Internet gateway for public subnets, to be able to recieve and send internet traffic
+  IGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: "Challenge"
+
+  # NAT gateway to allow internet access to instances in private subnet
+  NatGW:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - EIP
+          - AllocationId
+      SubnetId: !Ref VPCPublicSubnet1
+      Tags:
+        - Key: Name
+          Value: "Challenge 1"
+
+  # Attach internet Gateway to VPC
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref IGW
+      VpcId: !Ref VPC
+
+  # Web Tier Subnet 1
+  WebPublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      MapPublicIpOnLaunch: True
+      CidrBlock: !Ref WebSubnet1CIDR
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      Tags:
+        - Key: Name
+          Value: "Challenge 1"
+      VpcId: !Ref VPC
+
+  # Web Tier Subnet 2
+  WebPublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      MapPublicIpOnLaunch: True
+      CidrBlock: !Ref WebSubnet2CIDR
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      Tags:
+        - Key: Name
+          Value: ProjectXPub2
+      VpcId: !Ref VPC
+
+  # App Private Subnet 1
+  AppPrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref AppSubnet1CIDR
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      Tags:
+        - Key: Name
+          Value: "Challenge 1"
+      VpcId: !Ref VPC
+
+  # App Private Subnet 2
+  AppPrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref AppSubnet2CIDR
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      Tags:
+        - Key: Name
+          Value: "Challenge 1"
+      VpcId: !Ref VPC
+
+    # DB Private Subnet 1
+    DbPrivateSubnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+        CidrBlock: !Ref DbSubnet2CIDR
+        AvailabilityZone:
+          Fn::Select:
+            - 0
+            - Fn::GetAZs: ""
+        Tags:
+          - Key: Name
+            Value: "Challenge 1"
+        VpcId: !Ref VPC
+
+    # DB Private Subnet 2
+    DbPrivateSubnet2:
+      Type: AWS::EC2::Subnet
+      Properties:
+        CidrBlock: !Ref DbSubnet2CIDR
+        AvailabilityZone:
+          Fn::Select:
+            - 1
+            - Fn::GetAZs: ""
+        Tags:
+          - Key: Name
+            Value: "Challenge 1"
+        VpcId: !Ref VPC
+
+  # Public route table for public subnets - internet access and internal vpc traffic
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref myVPC
+      Tags:
+        - Key: Name
+          Value: ProjectXPubRT
+
+  # Route for internet access
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref IGW
+      RouteTableId: !Ref PublicRouteTable
+
+  # Attach Web subnet 1 to Public route
+  PublicRouteSubnetAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref WebPublicSubnet1
+
+  # Attach Web subnet 2 to Public route
+  PublicRouteSubnetAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref WebPublicSubnet2
+
+  # Route table for private subnets
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref myVPC
+      Tags:
+        - Key: Name
+          Value: ProjectXPrivRT
+
+  # Route for internet via NAT Gateway for Private subnets
+  PrivateDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref NatGW
+      RouteTableId: !Ref PrivateRouteTable
+
+  # Attach App subnet 1 to private route table
+  PrivateRouteAppSubnetAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref AppPrivateSubnet1
+
+  # Attach App subnet 2 to private route table
+  PrivateRouteAppSubnetAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref AppPrivateSubnet2
+
+  # Attach App subnet 1 to private route table
+  PrivateRouteDbSubnetAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref DbPrivateSubnet1
+
+  # Attach App subnet 2 to private route table
+  PrivateRouteDbSubnetAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref DbPrivateSubnet2
+
+Outputs:
+  VPCID:
+    Description: "VPC Id"
+    Value: !Ref VPC
+  WebPublic1:
+    Description: Web Public Subnet1
+    Value: !Ref WebPublicSubnet1
+  WebPublic2:
+    Description: Public Subnet 2
+    Value: !Ref WebPublicSubnet2
+  AppPrivate1:
+    Description: App Private Subnet1
+    Value: !Ref AppPrivateSubnet1
+  AppPrivate2:
+    Description: AppPrivate Subnet 2
+    Value: !Ref AppPrivateSubnet2
+  DbPrivate1:
+    Description: DB Private Subnet1
+    Value: !Ref DbPrivateSubnet1
+  DbPrivate2:
+    Description: DB Private Subnet 2
+    Value: !Ref DbPrivateSubnet2
+

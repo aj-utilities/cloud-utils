@@ -1,0 +1,110 @@
+# Template will be used to create Load Balancer, Listener, Target groups , Launch template for EC2's and EC2 instances under ASG
+# Template can be used independently to create web tier / app tier or called from main template as a nested stack
+# Template defines a sample structure and is not tested for resource creation
+# This template can be treated as a generic template and can be used as lego bricks in various stacks
+
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  LatestAmiId:
+    Description: Region specific image from the Parameter Store
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+  myLaunchTemplateVersionNumber:
+    Type: String
+  Subnets:
+    Type: CommaDelimitedList
+  AsgMinSize:
+    Description: Minimum size for Autoscaling group
+    Type: String
+  AsgMaxSize:
+    Description: Maximum size for Autoscaling group
+    Type: String
+  AsgDesiredCapacity:
+    Description: Desired capacity for Autoscaling group
+    Type: String
+  StackName:
+    Description: Stack Name used as resource identifier
+    Type: String
+
+# Declare other parameters, mappings, conditions, etc. here
+Resources:
+
+  # Create Load Balancer
+  # This is generic resource used to create public or private load balancer
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Ref StackName
+      Scheme: !Ref LbScheme
+      IpAddressType: ipv4
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Subnets:
+        - !Ref Subnet1Id
+        - !Ref Subnet2Id
+      Type: application
+
+  # Create Secure Listener on 443
+  # This resource can be made more generic to define custom actions
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn:
+            Ref: TargetGroup
+      LoadBalancerArn:
+        Ref: LoadBalancer
+      Port: '443' # This can be parameterized to make it generic
+      Protocol: HTTPS # This can be parameterized to make it generic
+      Certificates:
+        - CertificateArn: !Ref CertArn
+
+  # Create Target group, ASG instnaces will be attached to this
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Ref StackName
+      Port: '443' # This can be parameterized to make it generic
+      Protocol: 'HTTPS' # This can be parameterized to make it generic
+      VpcId: !Ref VPCID
+      HealthCheckIntervalSeconds: 30 # This can be parameterized to make it generic
+      HealthCheckPath: / # This can be parameterized to make it generic
+      HealthCheckPort: 443 # This can be parameterized to make it generic
+      HealthCheckProtocol: HTTPS # This can be parameterized to make it generic
+      HealthCheckTimeoutSeconds: 5 # This can be parameterized to make it generic
+      HealthyThresholdCount: 2 # This can be parameterized to make it generic
+      Tags:
+        - Key: Name
+          Value: !Ref StackName
+
+  # Launch Template
+  # This can be made generic to use across various stacks
+  # More Properties can be defined for launch template
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: !Ref LatestAmiId
+        InstanceType: t3.micro # This can be parameterized to make it generic
+      LaunchTemplateName: !Ref StackName
+
+  # Web auto scaling group
+  # This is sample autoscaling group with simple properties
+  # Other specific properties can be defined and parameterized
+  AutoscalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Ref StackName
+      MinSize: !Ref AsgMinSize
+      MaxSize: !Ref AsgMaxSize
+      DesiredCapacity: !Ref AsgDesiredCapacity
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !Ref myLaunchTemplateVersionNumber
+      TargetGroupARNs:
+        - !Ref TargetGroup
+      VPCZoneIdentifier: !Ref Subnets
+
+    # Security Groups can be define here
+    # Scaling Policies, Alarms, can be defined here

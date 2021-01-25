@@ -1,0 +1,60 @@
+# This template is just a structure to define rds resource, template has not been tested
+# Idea is to define a generic RDS template which can be used independently or as a lego resource from different stacks
+# This allows to re-use templates and is easier to maintain changes
+# Template can be made mature with validations, auto password generation, secret rotation, etc
+# Metadata missing
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Description": "AWS CloudFormation Sample Template for creating an Amazon RDS DB instance:
+
+Parameters:
+  DBInstanceID:
+    Description: database instance
+    Type: String
+
+  DBName:
+    Description: database name
+    Type: String
+
+  DBInstanceClass:
+    Description: DB instance class
+    Type: String
+
+  DBAllocatedStorage:
+    Description: The size of the database (GiB)
+    Type: Number
+
+  DBUsername:
+    NoEcho: 'true'
+    Description: Username for database access
+    Type: String
+
+  DBPassword:
+    NoEcho: 'true'
+    Description: Password MySQL database access
+    Type: String
+
+  DBEngine:
+    Description: DB engine to use
+    Type: String
+
+  DBVersion:
+    Description: Version of Database engine
+    Type:String
+
+
+Resources:
+  # Database Resource to create AWS RDS instance
+  DB:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      DBInstanceIdentifier: !Ref DBInstanceID
+      DBName: !Ref DBName
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: !Ref DBAllocatedStorage
+      Engine: !Ref DBEngine
+      EngineVersion: !Ref DBVersion
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword # This can be auto generated and added to secret manager
+
