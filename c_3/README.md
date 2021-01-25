@@ -54,6 +54,7 @@ JSON :
         }
     }
 }
+
 KEY :  p
 Output :  KEY_NOT_FOUND
 ```
@@ -64,3 +65,19 @@ $ python main.py -j '{"x":{"y":"z":"a"}}}' -k p
 Output :  INVALID_JSON_STRING
 ```
 
+
+### Known Issues
+- When value of key is JSON, output format is unicode - this can be enhanced
+```
+[ec2-user@ip-172-31-7-113 c_3]$ python main.py -j '{"x":{"y":{"z":"a"}}}' -k x
+JSON :
+{
+    "x": {
+        "y": {
+            "z": "a"
+        }
+    }
+}
+KEY :  x
+Output :  {u'y': {u'z': u'a'}}
+```
