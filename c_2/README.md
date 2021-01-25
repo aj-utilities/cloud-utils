@@ -1,6 +1,6 @@
 # AWS instance metadata - JSON util
 
-- This utility, queries ec2 instance metadata and generates JSON.
+- This utility queries ec2 instance metadata and generates JSON.
 - It allows to query key from JSON interactively. <br/>
 
 <br/>
