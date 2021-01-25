@@ -13,6 +13,7 @@ Usage Example : <br/>
 ######################################################
 AWS : Instance Meta Data JSON
 ######################################################
+```json
 {
   "ami-id": "ami-01720b5f421cf0179",
   "ami-launch-index": "0",
@@ -89,6 +90,7 @@ AWS : Instance Meta Data JSON
     "partition": "aws"
   }
 }
+```
 ######################################################
 You can query information for specific key
 Please input key to fetch value for
@@ -104,9 +106,11 @@ Please input key to fetch value for
 services
 ########################
 Fetched Value :
+```json
 {
   "domain": "amazonaws.com",
   "partition": "aws"
 }
+```
 Please input key to fetch value for
 ######################################################
